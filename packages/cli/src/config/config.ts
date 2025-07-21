@@ -59,6 +59,8 @@ export interface CliArgs {
   listExtensions: boolean | undefined;
   ideMode: boolean | undefined;
   proxy: string | undefined;
+  localModelUrl: string | undefined;
+  localModelTimeout: number | undefined;
 }
 
 export async function parseArguments(): Promise<CliArgs> {
@@ -192,6 +194,18 @@ export async function parseArguments(): Promise<CliArgs> {
       type: 'string',
       description:
         'Proxy for gemini client, like schema://user:password@host:port',
+    })
+    .option('local-model-url', {
+      type: 'string',
+      description:
+        'URL of local model server (e.g., http://localhost:8000). Use with GEMINI_AUTH_TYPE=local-model',
+      default: process.env.GEMINI_LOCAL_MODEL_URL || 'http://localhost:8000',
+    })
+    .option('local-model-timeout', {
+      type: 'number',
+      description:
+        'Timeout in milliseconds for local model requests',
+      default: parseInt(process.env.GEMINI_LOCAL_MODEL_TIMEOUT || '30000'),
     })
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
     .alias('v', 'version')
@@ -428,6 +442,8 @@ export async function loadCliConfig(
     noBrowser: !!process.env.NO_BROWSER,
     summarizeToolOutput: settings.summarizeToolOutput,
     ideMode,
+    localModelUrl: argv.localModelUrl,
+    localModelTimeout: argv.localModelTimeout,
   });
 }
 

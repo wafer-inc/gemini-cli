@@ -90,6 +90,9 @@ import { runAcpPeer } from './acp/acpPeer.js';
 export async function main() {
   const workspaceRoot = process.cwd();
   const settings = loadSettings(workspaceRoot);
+  
+  console.log('DEBUG: Environment GEMINI_AUTH_TYPE:', process.env.GEMINI_AUTH_TYPE);
+  console.log('DEBUG: Initial selectedAuthType:', settings.merged.selectedAuthType);
 
   await cleanupCheckpoints();
   if (settings.errors.length > 0) {
@@ -128,7 +131,7 @@ export async function main() {
     process.exit(0);
   }
 
-  // Set a default auth type if one isn't set.
+  // Set a default auth type if one isn't set, or override if environment variable is set.
   if (!settings.merged.selectedAuthType) {
     if (process.env.CLOUD_SHELL === 'true') {
       settings.setValue(
@@ -136,8 +139,32 @@ export async function main() {
         'selectedAuthType',
         AuthType.CLOUD_SHELL,
       );
+    } else if (process.env.GEMINI_AUTH_TYPE === 'local-model') {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.LOCAL_MODEL,
+      );
+    }
+  } else {
+    // Override existing auth type if environment variable is explicitly set
+    if (process.env.GEMINI_AUTH_TYPE === 'local-model') {
+      console.log('DEBUG: Setting auth type to LOCAL_MODEL from GEMINI_AUTH_TYPE env var');
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.LOCAL_MODEL,
+      );
+    } else if (process.env.CLOUD_SHELL === 'true') {
+      settings.setValue(
+        SettingScope.User,
+        'selectedAuthType',
+        AuthType.CLOUD_SHELL,
+      );
     }
   }
+
+  console.log('DEBUG: Current selectedAuthType:', settings.merged.selectedAuthType);
 
   setMaxSizedBoxDebugging(config.getDebugMode());
 
@@ -152,14 +179,18 @@ export async function main() {
   }
 
   // hop into sandbox if we are outside and sandboxing is enabled
+  console.log('DEBUG: SANDBOX env var:', process.env.SANDBOX);
+  console.log('DEBUG: About to check sandbox...');
   if (!process.env.SANDBOX) {
     const memoryArgs = settings.merged.autoConfigureMaxOldSpaceSize
       ? getNodeMemoryArgs(config)
       : [];
     const sandboxConfig = config.getSandbox();
     if (sandboxConfig) {
+      console.log('DEBUG: Entering sandbox config section');
       if (settings.merged.selectedAuthType) {
         // Validate authentication here because the sandbox will interfere with the Oauth2 web redirect.
+        console.log('DEBUG: About to validate auth method:', settings.merged.selectedAuthType);
         try {
           const err = validateAuthMethod(settings.merged.selectedAuthType);
           if (err) {

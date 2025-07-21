@@ -8,6 +8,8 @@ import { AuthType } from '@google/gemini-cli-core';
 import { loadEnvironment } from './settings.js';
 
 export const validateAuthMethod = (authMethod: string): string | null => {
+  console.log('DEBUG: validateAuthMethod called with:', authMethod);
+  console.log('DEBUG: GEMINI_AUTH_TYPE env var:', process.env.GEMINI_AUTH_TYPE);
   loadEnvironment();
   if (
     authMethod === AuthType.LOGIN_WITH_GOOGLE ||
@@ -35,6 +37,12 @@ export const validateAuthMethod = (authMethod: string): string | null => {
         'Update your environment and try again (no reload needed if using .env)!'
       );
     }
+    return null;
+  }
+
+  if (authMethod === AuthType.LOCAL_MODEL) {
+    // Local model doesn't require additional environment validation
+    // The URL is provided via CLI args or environment variables
     return null;
   }
 

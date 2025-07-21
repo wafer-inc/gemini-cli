@@ -18,6 +18,7 @@ import { DEFAULT_GEMINI_MODEL } from '../config/models.js';
 import { Config } from '../config/config.js';
 import { getEffectiveModel } from './modelCheck.js';
 import { UserTierId } from '../code_assist/types.js';
+import { LocalContentGenerator } from './localContentGenerator.js';
 
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
@@ -43,6 +44,7 @@ export enum AuthType {
   USE_GEMINI = 'gemini-api-key',
   USE_VERTEX_AI = 'vertex-ai',
   CLOUD_SHELL = 'cloud-shell',
+  LOCAL_MODEL = 'local-model',
 }
 
 export type ContentGeneratorConfig = {
@@ -51,6 +53,8 @@ export type ContentGeneratorConfig = {
   vertexai?: boolean;
   authType?: AuthType | undefined;
   proxy?: string | undefined;
+  localModelUrl?: string;
+  localModelTimeout?: number;
 };
 
 export function createContentGeneratorConfig(
@@ -69,12 +73,15 @@ export function createContentGeneratorConfig(
     model: effectiveModel,
     authType,
     proxy: config?.getProxy(),
+    localModelUrl: config?.getLocalModelUrl(),
+    localModelTimeout: config?.getLocalModelTimeout(),
   };
 
-  // If we are using Google auth or we are in Cloud Shell, there is nothing else to validate for now
+  // If we are using Google auth, Cloud Shell, or local model, there is nothing else to validate for now
   if (
     authType === AuthType.LOGIN_WITH_GOOGLE ||
-    authType === AuthType.CLOUD_SHELL
+    authType === AuthType.CLOUD_SHELL ||
+    authType === AuthType.LOCAL_MODEL
   ) {
     return contentGeneratorConfig;
   }
@@ -138,6 +145,18 @@ export async function createContentGenerator(
     });
 
     return googleGenAI.models;
+  }
+
+  if (config.authType === AuthType.LOCAL_MODEL) {
+    if (!config.localModelUrl) {
+      throw new Error('Local model URL is required for LOCAL_MODEL auth type');
+    }
+
+    return new LocalContentGenerator({
+      baseUrl: config.localModelUrl,
+      model: config.model,
+      timeout: config.localModelTimeout,
+    });
   }
 
   throw new Error(

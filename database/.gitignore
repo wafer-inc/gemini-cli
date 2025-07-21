@@ -1,0 +1,10 @@
+# Ignore database files - they contain sensitive data and are pulled from device
+*.db
+*.sqlite
+*.sqlite3
+
+# Exception: Allow wafer.db for the FindSimilarSubjects tool
+!wafer.db
+
+# Keep this directory structure
+!.gitkeep

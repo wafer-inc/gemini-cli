@@ -28,6 +28,7 @@ import {
   GEMINI_CONFIG_DIR as GEMINI_DIR,
 } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
+import { FindSimilarSubjectsTool } from '../tools/find-similar-subjects.js';
 import { GeminiClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
@@ -154,6 +155,8 @@ export interface ConfigParameters {
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
   ideMode?: boolean;
+  localModelUrl?: string;
+  localModelTimeout?: number;
 }
 
 export class Config {
@@ -208,6 +211,8 @@ export class Config {
     | Record<string, SummarizeToolOutputSettings>
     | undefined;
   private readonly experimentalAcp: boolean = false;
+  private readonly localModelUrl: string | undefined;
+  private readonly localModelTimeout: number;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;
@@ -257,6 +262,8 @@ export class Config {
     this.noBrowser = params.noBrowser ?? false;
     this.summarizeToolOutput = params.summarizeToolOutput;
     this.ideMode = params.ideMode ?? false;
+    this.localModelUrl = params.localModelUrl;
+    this.localModelTimeout = params.localModelTimeout ?? 30000;
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -535,6 +542,14 @@ export class Config {
     return this.ideMode;
   }
 
+  getLocalModelUrl(): string | undefined {
+    return this.localModelUrl;
+  }
+
+  getLocalModelTimeout(): number {
+    return this.localModelTimeout;
+  }
+
   async getGitService(): Promise<GitService> {
     if (!this.gitService) {
       this.gitService = new GitService(this.targetDir);
@@ -604,6 +619,7 @@ export class Config {
     registerCoreTool(ShellTool, this);
     registerCoreTool(MemoryTool);
     registerCoreTool(WebSearchTool, this);
+    registerCoreTool(FindSimilarSubjectsTool, this);
 
     await registry.discoverTools();
     return registry;
