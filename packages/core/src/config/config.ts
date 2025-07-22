@@ -12,23 +12,15 @@ import {
   createContentGeneratorConfig,
 } from '../core/contentGenerator.js';
 import { ToolRegistry } from '../tools/tool-registry.js';
-import { LSTool } from '../tools/ls.js';
 import { ReadFileTool } from '../tools/read-file.js';
-import { GrepTool } from '../tools/grep.js';
-import { GlobTool } from '../tools/glob.js';
-import { EditTool } from '../tools/edit.js';
-import { ShellTool } from '../tools/shell.js';
-import { WriteFileTool } from '../tools/write-file.js';
-import { WebFetchTool } from '../tools/web-fetch.js';
-import { ReadManyFilesTool } from '../tools/read-many-files.js';
+import { FindSimilarSubjectsTool } from '../tools/find-similar-subjects.js';
+import { FindSubjectRelationshipTool } from '../tools/find-subject-relationship.js';
+import { FindSourcesBySubjectTool } from '../tools/find-sources-by-subject.js';
+import { SQLiteQueryTool } from '../tools/sqlite-query.js';
 import {
-  MemoryTool,
   setGeminiMdFilename,
   GEMINI_CONFIG_DIR as GEMINI_DIR,
 } from '../tools/memoryTool.js';
-import { WebSearchTool } from '../tools/web-search.js';
-import { FindSimilarSubjectsTool } from '../tools/find-similar-subjects.js';
-import { FindSubjectRelationshipTool } from '../tools/find-subject-relationship.js';
 import { GeminiClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
@@ -627,19 +619,11 @@ export class Config {
       }
     };
 
-    registerCoreTool(LSTool, this);
     registerCoreTool(ReadFileTool, this);
-    registerCoreTool(GrepTool, this);
-    registerCoreTool(GlobTool, this);
-    registerCoreTool(EditTool, this);
-    registerCoreTool(WriteFileTool, this);
-    registerCoreTool(WebFetchTool, this);
-    registerCoreTool(ReadManyFilesTool, this);
-    registerCoreTool(ShellTool, this);
-    registerCoreTool(MemoryTool);
-    registerCoreTool(WebSearchTool, this);
     registerCoreTool(FindSimilarSubjectsTool, this);
     registerCoreTool(FindSubjectRelationshipTool, this);
+    registerCoreTool(FindSourcesBySubjectTool, this);
+    registerCoreTool(SQLiteQueryTool, this);
 
     await registry.discoverTools();
     return registry;

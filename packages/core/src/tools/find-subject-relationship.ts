@@ -5,6 +5,7 @@
  */
 
 import path from 'path';
+import fs from 'fs';
 import sqlite3 from 'sqlite3';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { BaseTool, Icon, ToolResult } from './tools.js';
@@ -166,7 +167,6 @@ export class FindSubjectRelationshipTool extends BaseTool<
 
       // Check if database file exists
       try {
-        const fs = require('fs');
         if (!fs.existsSync(dbPath)) {
           reject(new Error(`Database file not found at path: ${dbPath}`));
           return;
