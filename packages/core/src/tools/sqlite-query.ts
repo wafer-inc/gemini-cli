@@ -11,6 +11,7 @@ import { SchemaValidator } from '../utils/schemaValidator.js';
 import { BaseTool, Icon, ToolResult } from './tools.js';
 import { Type } from '@google/genai';
 import { Config } from '../config/config.js';
+import { convertTimestampsInResults } from '../utils/timestampConverter.js';
 
 /**
  * Parameters for the SQLiteQuery tool
@@ -255,13 +256,18 @@ export class SQLiteQueryTool extends BaseTool<
       return `Query executed successfully. No results returned.\n\nQuery: ${query}`;
     }
 
-    const header = `Query returned ${results.length} row${results.length === 1 ? '' : 's'}:\n`;
+    // Convert timestamps to human-readable dates
+    const convertedResults = convertTimestampsInResults(results, {
+      dateFormat: 'locale'
+    });
+
+    const header = `Query returned ${convertedResults.length} row${convertedResults.length === 1 ? '' : 's'}:\n`;
     
     // Get column names from first result
-    const columns = Object.keys(results[0]);
+    const columns = Object.keys(convertedResults[0]);
     
     // Create table-like output
-    const rows = results.map((row, index) => {
+    const rows = convertedResults.map((row, index) => {
       const values = columns.map(col => {
         const value = row[col];
         if (value === null) return 'NULL';
@@ -274,7 +280,7 @@ export class SQLiteQueryTool extends BaseTool<
       return `${index + 1}. ${columns.map((col, i) => `${col}: ${values[i]}`).join(' | ')}`;
     }).join('\n');
 
-    const footer = results.length >= 100 ? '\n\n(Results may be truncated at 100 rows)' : '';
+    const footer = convertedResults.length >= 100 ? '\n\n(Results may be truncated at 100 rows)' : '';
     
     return `${header}\n${rows}${footer}\n\nQuery: ${query}`;
   }

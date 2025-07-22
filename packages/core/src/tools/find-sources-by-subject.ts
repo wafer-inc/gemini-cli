@@ -11,6 +11,7 @@ import { SchemaValidator } from '../utils/schemaValidator.js';
 import { BaseTool, Icon, ToolResult } from './tools.js';
 import { Type } from '@google/genai';
 import { Config } from '../config/config.js';
+import { convertTimestampsInResults } from '../utils/timestampConverter.js';
 
 /**
  * Database structure interfaces
@@ -201,7 +202,13 @@ export class FindSourcesBySubjectTool extends BaseTool<
               return;
             }
 
-            const sources: SourceWithSubject[] = rows.map(row => ({
+            // Convert timestamps in the raw data first
+            const convertedRows = convertTimestampsInResults(rows, {
+              timestampColumns: ['dates'],
+              dateFormat: 'locale'
+            });
+
+            const sources: SourceWithSubject[] = convertedRows.map(row => ({
               source: {
                 id: row.id,
                 source_text: row.source_text,
