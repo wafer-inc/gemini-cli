@@ -130,7 +130,7 @@ export class FindSimilarSubjectsTool extends BaseTool<
 
       const resultText =
         similarSubjects.length > 0
-          ? `Found ${similarSubjects.length} similar subjects:\n${similarSubjects.map((s) => `- ${s}`).join('\n')}`
+          ? `Found ${similarSubjects.length} similar subjects:\n${similarSubjects.map((s) => `- ${s.subject} (ID: ${s.id})`).join('\n')}`
           : `No similar subjects found for "${params.subject}"`;
 
       return {
@@ -150,7 +150,7 @@ export class FindSimilarSubjectsTool extends BaseTool<
     subject: string,
     limit: number,
     threshold: number,
-  ): Promise<string[]> {
+  ): Promise<{id: number, subject: string}[]> {
     return new Promise((resolve, reject) => {
       const dbPath = path.join(
         this.config.getTargetDir(),
@@ -176,6 +176,7 @@ export class FindSimilarSubjectsTool extends BaseTool<
       // Query to find subjects that co-occur most frequently with the given subject
       const query = `
         SELECT 
+          s2.id,
           s2.subject,
           COUNT(*) as co_occurrence_count
         FROM source_subjects ss1
@@ -184,7 +185,7 @@ export class FindSimilarSubjectsTool extends BaseTool<
         JOIN subjects s2 ON ss2.subject_id = s2.id
         WHERE s1.subject = ? COLLATE NOCASE
         AND s2.subject != ? COLLATE NOCASE
-        GROUP BY s2.subject
+        GROUP BY s2.id, s2.subject
         ORDER BY co_occurrence_count DESC
         LIMIT ?
       `;
@@ -200,7 +201,10 @@ export class FindSimilarSubjectsTool extends BaseTool<
             return;
           }
 
-          const similarSubjects = rows.map((row) => row.subject as string);
+          const similarSubjects = rows.map((row) => ({
+            id: row.id as number,
+            subject: row.subject as string
+          }));
           resolve(similarSubjects);
         },
       );

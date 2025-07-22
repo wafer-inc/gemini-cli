@@ -28,6 +28,7 @@ import {
 } from '../tools/memoryTool.js';
 import { WebSearchTool } from '../tools/web-search.js';
 import { FindSimilarSubjectsTool } from '../tools/find-similar-subjects.js';
+import { FindSubjectRelationshipTool } from '../tools/find-subject-relationship.js';
 import { GeminiClient } from '../core/client.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { GitService } from '../services/gitService.js';
@@ -638,6 +639,7 @@ export class Config {
     registerCoreTool(MemoryTool);
     registerCoreTool(WebSearchTool, this);
     registerCoreTool(FindSimilarSubjectsTool, this);
+    registerCoreTool(FindSubjectRelationshipTool, this);
 
     await registry.discoverTools();
     return registry;
